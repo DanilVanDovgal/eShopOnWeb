@@ -30,9 +30,9 @@ builder.Configuration.AddConfigurationFile("appsettings.test.json");
 builder.Services.ConfigureLocalDatabaseContexts(builder.Configuration);
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-        .AddRoles<IdentityRole>()
-        .AddEntityFrameworkStores<AppIdentityDbContext>()
-        .AddDefaultTokenProviders();
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AppIdentityDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddCustomServices(builder.Configuration);
 
@@ -58,8 +58,7 @@ builder.Services.AddMetronome();
 var seqUrl = builder.Configuration["Seq:ServerUrl"];
 if (seqUrl != null)
 {
-    builder.AddSeqEndpoint(connectionName: "seq", options =>
-    {
+    builder.AddSeqEndpoint(connectionName: "seq", options => {
         options.ServerUrl = seqUrl;
     });
 }
