@@ -47,7 +47,7 @@ public class CatalogItemListPagedEndpoint(IRepository<CatalogItem> itemRepositor
 
         _logger.LogInformation("The CatalogItem to be displayed is " + response.CatalogItems.Count);
 
-        throw new Exception("Cannot move further");
+        //throw new Exception("Cannot move further");
         
         foreach (CatalogItemDto item in response.CatalogItems)
         {
