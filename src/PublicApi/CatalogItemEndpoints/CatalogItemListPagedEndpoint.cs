@@ -30,8 +30,6 @@ public class CatalogItemListPagedEndpoint(IRepository<CatalogItem> itemRepositor
     public override async Task<ListPagedCatalogItemResponse> ExecuteAsync(ListPagedCatalogItemRequest request, CancellationToken ct)
     {
         await Task.Delay(1000, ct);
-        _logger.LogInformation("TEST test");
-
         var response = new ListPagedCatalogItemResponse(request.CorrelationId());
 
         var filterSpec = new CatalogFilterSpecification(request.CatalogBrandId, request.CatalogTypeId);
@@ -46,6 +44,10 @@ public class CatalogItemListPagedEndpoint(IRepository<CatalogItem> itemRepositor
         var items = await itemRepository.ListAsync(pagedSpec, ct);
 
         response.CatalogItems.AddRange(items.Select(mapper.Map<CatalogItemDto>));
+
+        _logger.LogInformation("The CatalogItem to be displayed is " + response.CatalogItems.Count);
+        throw new Exception("Cannot move further");
+
         foreach (CatalogItemDto item in response.CatalogItems)
         {
             item.PictureUri = uriComposer.ComposePicUri(item.PictureUri);
