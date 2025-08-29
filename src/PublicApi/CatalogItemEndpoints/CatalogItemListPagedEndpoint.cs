@@ -46,8 +46,9 @@ public class CatalogItemListPagedEndpoint(IRepository<CatalogItem> itemRepositor
         response.CatalogItems.AddRange(items.Select(mapper.Map<CatalogItemDto>));
 
         _logger.LogInformation("The CatalogItem to be displayed is " + response.CatalogItems.Count);
-        throw new Exception("Cannot move further");
 
+        throw new Exception("Cannot move further");
+        
         foreach (CatalogItemDto item in response.CatalogItems)
         {
             item.PictureUri = uriComposer.ComposePicUri(item.PictureUri);
