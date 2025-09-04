@@ -9,6 +9,7 @@
 		<PackageReference Include="Ardalis.GuardClauses" />
 		<PackageReference Include="Ardalis.Result" />
 		<PackageReference Include="Ardalis.Specification" />
+		<PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="NimblePros.SharedKernel" />
     <PackageReference Include="System.Security.Claims" />
 		<PackageReference Include="System.Text.Json" />
