@@ -23,7 +23,10 @@ public class OrderService : IOrderService
     private readonly IMediator _mediator;
     private readonly HttpClient _httpClient;
 
-    private readonly string functionUrl = Environment.GetEnvironmentVariable("AZURE_API_URL");
+    private readonly string _functionUrl = Environment.GetEnvironmentVariable("AZURE_API_URL");
+    private readonly string _orderReservationPath = Environment.GetEnvironmentVariable("AZURE_RESERVATION_PATH");
+    private readonly string _orderDeliveryPath = Environment.GetEnvironmentVariable("AZURE_DELIVERY_PATH");
+    private readonly string _apiKey = Environment.GetEnvironmentVariable("AZURE_API_KEY");
 
     public OrderService(IRepository<Basket> basketRepository,
         IRepository<CatalogItem> itemRepository,
@@ -61,13 +64,27 @@ public class OrderService : IOrderService
 
         await _orderRepository.AddAsync(order);
 
-        //Call Azure function
-        var request = new HttpRequestMessage(HttpMethod.Post, functionUrl);
-        request.Content = JsonContent.Create(order);
-        request.Headers.Add("x-functions-key", Environment.GetEnvironmentVariable("AZURE_API_KEY"));
-        var response = await _httpClient.SendAsync(request);
-        
+        //Call Azure function to reserve items
+        var reserveResponse = await CallAzureFunctionAsync(_orderReservationPath, order);
+
+        //Call Azure function to process delivery
+        var deliveryResponse = await CallAzureFunctionAsync(_orderDeliveryPath, order);
+
         OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(order);
         await _mediator.Publish(orderCreatedEvent);
+    }
+
+    private async Task<HttpResponseMessage> CallAzureFunctionAsync(string path, object content)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, _functionUrl + path)
+        {
+            Content = JsonContent.Create(content)
+        };
+
+        // Add the Azure Function API key header
+        request.Headers.Add("x-functions-key", _apiKey);
+
+        // Send the request
+        return await _httpClient.SendAsync(request);
     }
 }
