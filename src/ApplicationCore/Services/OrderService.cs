@@ -2,8 +2,10 @@
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Ardalis.GuardClauses;
+using Azure.Messaging.ServiceBus;
 using MediatR;
 using Microsoft.eShopWeb.ApplicationCore.Entities;
 using Microsoft.eShopWeb.ApplicationCore.Entities.BasketAggregate;
@@ -27,6 +29,9 @@ public class OrderService : IOrderService
     private readonly string _orderReservationPath = Environment.GetEnvironmentVariable("AZURE_RESERVATION_PATH");
     private readonly string _orderDeliveryPath = Environment.GetEnvironmentVariable("AZURE_DELIVERY_PATH");
     private readonly string _apiKey = Environment.GetEnvironmentVariable("AZURE_API_KEY");
+
+    private readonly string _serviceBusConnectionString = Environment.GetEnvironmentVariable("SB_CONNECTION_STRING");
+    private readonly string _topicName = Environment.GetEnvironmentVariable("SB_ORDER_TOPIC");
 
     public OrderService(IRepository<Basket> basketRepository,
         IRepository<CatalogItem> itemRepository,
@@ -64,11 +69,14 @@ public class OrderService : IOrderService
 
         await _orderRepository.AddAsync(order);
 
-        //Call Azure function to reserve items
-        var reserveResponse = await CallAzureFunctionAsync(_orderReservationPath, order);
+        ////Call Azure function to reserve items
+        //var reserveResponse = await CallAzureFunctionAsync(_orderReservationPath, order);
 
-        //Call Azure function to process delivery
-        var deliveryResponse = await CallAzureFunctionAsync(_orderDeliveryPath, order);
+        ////Call Azure function to process delivery
+        //var deliveryResponse = await CallAzureFunctionAsync(_orderDeliveryPath, order);
+
+        //Call PublishOrderMessageAsync method to publish order into the topic
+        await PublishOrderMessageAsync(order);
 
         OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(order);
         await _mediator.Publish(orderCreatedEvent);
@@ -86,5 +94,21 @@ public class OrderService : IOrderService
 
         // Send the request
         return await _httpClient.SendAsync(request);
+    }
+
+    public async Task PublishOrderMessageAsync(Order order)
+    {
+        // Create a Service Bus client
+        await using var client = new ServiceBusClient(_serviceBusConnectionString);
+        var sender = client.CreateSender(_topicName);
+
+        // Create a message
+        var message = new ServiceBusMessage(JsonSerializer.Serialize(order))
+        {
+            ContentType = "application/json"
+        };
+
+        // Send the message
+        await sender.SendMessageAsync(message);
     }
 }
